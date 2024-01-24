@@ -1,0 +1,28 @@
+# caminho: deve ser criado na raíz do projeto: docker-compose.yml
+version: "3"  # Versão do Docker Compose utilizada.
+
+services:  # Início da definição dos serviços do seu aplicativo.
+
+  nginx:  # Nome do serviço nginx.
+    image: nginx:1.25.1  # Imagem Docker que será usada para esse serviço.
+    ports:
+      - "8000:80"  # Mapeia a porta 80 do host para a porta 80 do container.
+    volumes:  # Define volumes para persistir dados entre execuções do container.
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf  # Mapeia o arquivo nginx.conf do host para o container.
+      - ./infra/nginx/vhost.conf:/etc/nginx/conf.d/default.conf  # Mapeia o arquivo vhost.conf do host para o container.
+      - .:/var/www  # Mapeia o diretório atual do host para /var/www no container.
+      - /var/run/php:/var/run/php  # Cria um volume para /var/run/php no container.
+    depends_on:  # Define as dependências deste serviço.
+      - api  # Este serviço depende do serviço "api".
+
+  api:  # Nome do serviço de nossa aplicação laravel.
+    build:  # Especifica as opções de construção para a imagem do serviço.
+      context: .  # Define o diretório de contexto para a construção da imagem.
+      dockerfile: ./infra/Dockerfile
+    container_name: api  # Define o nome do container.
+    volumes:  # Define volumes, de forma similar ao serviço "nginx".
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infra/nginx/vhost.conf:/etc/nginx/conf.d/default.conf
+      - .:/var/www
+      - /var/run/php:/var/run/php
+    working_dir: /var/www  # Define o diretório de trabalho dentro do container.
